@@ -1,0 +1,22 @@
+[package]
+name = "habr_news_slint"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+authors = ["Mashkin Igor <igorsergeewich@gmail.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reqwest = {version = "0.12.2", features = ["blocking"]} 
+scraper = "0.19.0"
+slint = "^1.5.1"
+tokio = {version = "1.37.0", features = ["full"]}
+webbrowser = "0.8.14"
+
+
+[build-dependencies]
+slint-build = "^1.5.1"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1.12"

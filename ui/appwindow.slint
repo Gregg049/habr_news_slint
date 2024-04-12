@@ -1,0 +1,167 @@
+import { HorizontalBox, Button, AboutSlint, ScrollView, VerticalBox } from "std-widgets.slint";
+
+    export struct NewsCard {
+        title: string,
+        descr: string,
+        url: string,
+    }
+    component EntryUrl  {
+        callback clicked <=> ta.clicked;
+        in property text <=> txt.text;
+            ta := TouchArea {
+                txt := Text {
+                    color: blue;
+                }
+                mouse-cursor: pointer;
+            }
+        @children
+}
+
+    component  Button inherits Rectangle {
+            in-out property text <=> txt.text;
+            callback clicked <=> ta.clicked;
+            background: ta.pressed ? #444849: ta.has-hover ? #b5b5c7: #6b7173;
+            border-color: self.background.darker(40%);
+            border-width: 3px;
+            border-radius: 8px;
+            width: 30px;
+            height: 30px;
+            txt := Text {
+                x: (parent.width - self.width) / 2 + (ta.pressed ? 2px : 0);
+                y: (parent.height - self.height) / 2 + (ta.pressed ? 3px : 2px);
+                color: black;
+            } 
+            ta:= TouchArea { }
+    }
+       
+export global Mode {
+    in property <bool> mode: true;// светлый или темный режим
+    in property <bool> anim: true;// вкл выкл анимации загрузки
+    in property <bool> error;// вкл выкл анимации ошибки
+}
+
+component Await {
+    Rectangle {
+        background: @radial-gradient(circle, yellow, red);
+        border-radius: 25px;
+        y: 37px + 35px * cos(360deg * animation-tick()/2s);
+        x: 37px + 35px * sin(360deg * animation-tick()/2s);
+        width: 25px;
+        height: 25px;
+    }
+    HorizontalLayout {
+        Rectangle {
+            opacity: 1 + sin(260deg * animation-tick()/2s);
+            border-radius: 50px;
+            border-width: 2px;
+            border-color: gray;
+            width: 100px;
+            height: 100px;
+        }
+    }
+}
+
+component Error inherits Rectangle{
+    width: 200px;
+    height: 100px;
+    VerticalBox {
+        Text {
+            horizontal-alignment: center;
+            font-size: 20px + 30px * abs(sin(260deg * animation-tick()/2s));
+            color: yellow;
+            text: "⚠";
+        }
+        Text {
+            horizontal-alignment: center;
+            font-size: 10px + 10px * abs(cos(260deg * animation-tick()/2s));
+            color: red;
+            text: "Bad connect";
+        }
+    }
+}
+
+export component MainWindow inherits Window {
+    background: Mode.mode ? black: white;
+    min-height: 750px;
+    min-width: 600px;
+    no-frame: true;
+    
+    title: "HabrNews";
+    if Mode.anim: Await {}
+    if Mode.error: Error {}
+    in-out property <[NewsCard]> articles: [{ title: "",
+                                                descr: "",
+                                                url: "" }];
+    callback handle_url(string);
+    callback close;
+    callback update;
+    in-out property opa <=> rect.opacity;
+    icon: @image-url("icons/ico_habr.png");
+        VerticalLayout {            
+                HorizontalLayout {
+                    padding: 10px;
+                Text {
+                    font-size: 20px;
+                    vertical-alignment: center;
+                    color: red;
+                    text: "♨";
+                }
+                Text {
+                    font-size: 20px;
+                    color: yellowgreen;
+                    text: "Habr news";
+                }
+                    spacing: 5px;
+                Button { 
+                    text: Mode.mode ? "🌙": "🌞";
+                    clicked => { Mode.mode = !Mode.mode }
+                }
+                Button { 
+                    text: "🔁";
+                    clicked => {
+                        root.update();
+                    }
+                }
+                Button { 
+                    text: "❌";
+                    clicked => { root.close(); }
+                }
+            }
+            Rectangle { height: 1px; background: cyan;}
+            rect := Rectangle {
+                
+                ScrollView {
+                    VerticalBox {
+                        for n in root.articles: Rectangle {
+                            VerticalBox {
+                                alignment: start;
+                                Text {
+                                    font-size: 20px;
+                                    wrap: word-wrap;
+                                    color: Mode.mode ? white: black;
+                                    text: n.title ; 
+                                }
+                                Text {
+                                    wrap: word-wrap;
+                                    color: Mode.mode ? white: black; 
+                                    text: n.descr ; 
+                                }
+                                HorizontalLayout {
+                                    alignment: end;
+                                    padding-right: 20px;
+                                    EntryUrl {
+                                        if n.url != "": EntryUrl { 
+                                            text: "read me ✔";
+                                            clicked => { handle_url(n.url) }
+                                        }                                        
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Rectangle { height: 1px; background: cyan;}
+            AboutSlint {  height: 60px; width: 100px; }
+        }
+    }
